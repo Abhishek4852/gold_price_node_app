@@ -1,97 +1,108 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-    <title>Gold Price Prediction</title>
-    <style>
-        body {
-            font-family: "Poppins", sans-serif;
-            background: linear-gradient(135deg, #f7f8fc, #e0e7ff);
-            text-align: center;
-            padding: 50px;
-        }
-        form {
-            background: white;
-            padding: 30px 25px;
-            margin: auto;
-            width: 360px;
-            border-radius: 15px;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.15);
-        }
-        input {
-            margin: 10px 0;
-            padding: 10px;
-            width: 90%;
-            border-radius: 8px;
-            border: 1px solid #ccc;
-            outline: none;
-            font-size: 14px;
-        }
-        input:focus {
-            border-color: #007bff;
-        }
-        button {
-            background: #007bff;
-            color: white;
-            border: none;
-            padding: 12px 25px;
-            border-radius: 8px;
-            font-size: 15px;
-            cursor: pointer;
-            transition: 0.3s;
-        }
-        button:hover {
-            background: #0056b3;
-        }
-        h2 {
-            color: #333;
-            margin-bottom: 20px;
-        }
-        h3 {
-            color: #007bff;
-            margin-top: 20px;
-        }
-    </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Gold Price Prediction</title>
+  <style>
+    body {
+      font-family: "Poppins", sans-serif;
+      background: linear-gradient(135deg, #f7f8fc, #e0e7ff);
+      text-align: center;
+      padding: 50px;
+    }
+    form {
+      background: white;
+      padding: 30px 25px;
+      margin: auto;
+      width: 360px;
+      border-radius: 15px;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.15);
+    }
+    input {
+      margin: 10px 0;
+      padding: 10px;
+      width: 90%;
+      border-radius: 8px;
+      border: 1px solid #ccc;
+      outline: none;
+      font-size: 14px;
+    }
+    input:focus {
+      border-color: #007bff;
+    }
+    button {
+      background: #007bff;
+      color: white;
+      border: none;
+      padding: 12px 25px;
+      border-radius: 8px;
+      font-size: 15px;
+      cursor: pointer;
+      transition: 0.3s;
+    }
+    button:hover {
+      background: #0056b3;
+    }
+    h2 {
+      color: #333;
+      margin-bottom: 20px;
+    }
+    h3 {
+      color: #007bff;
+      margin-top: 20px;
+    }
+  </style>
 </head>
 <body>
-    <h2>Gold Price Prediction</h2>
+  <h2>Gold Price Prediction</h2>
+  <!-- ✅ Added id="predictForm" so JS can target it -->
+  <form id="predictForm">
+    <input type="text" name="oil_close" placeholder="Oil Close" required><br>
+    <input type="text" name="nasdaq_close" placeholder="Nasdaq Close" required><br>
+    <input type="text" name="sp500_close" placeholder="S&P 500 Close" required><br>
+    <input type="text" name="CPI" placeholder="CPI" required><br>
+    <input type="text" name="GDP" placeholder="GDP" required><br>
+    <input type="text" name="silver_close" placeholder="Silver Close" required><br>
+    <input type="text" name="usd_chf" placeholder="USD/CHF" required><br><br>
+    <button type="submit">Predict</button>
+  </form>
 
-    <!-- 👇 ID add kar diya -->
-    <form id="predictForm">
-        <input type="text" name="oil_close" placeholder="Oil Close" required><br>
-        <input type="text" name="nasdaq_close" placeholder="Nasdaq Close" required><br>
-        <input type="text" name="sp500_close" placeholder="S&P 500 Close" required><br>
-        <input type="text" name="CPI" placeholder="CPI" required><br>
-        <input type="text" name="GDP" placeholder="GDP" required><br>
-        <input type="text" name="silver_close" placeholder="Silver Close" required><br>
-        <input type="text" name="usd_chf" placeholder="USD/CHF" required><br><br>
-        <button type="submit">Predict</button>
-    </form>
+  <h3 id="predictionText"></h3>
 
-    <h3 id="predictionText"></h3>
-
-    <script>
+  <script>
+    // ✅ When form is submitted
     document.getElementById("predictForm").addEventListener("submit", async function(e) {
-        e.preventDefault();
+      e.preventDefault();
 
-        const formData = new FormData(this);
-        const data = Object.fromEntries(formData.entries());
+      // Collect input data
+      const formData = new FormData(this);
+      const data = Object.fromEntries(formData.entries());
 
-        const response = await fetch("/predict", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(data)
+      try {
+        // ✅ Auto-detect API URL (local or Vercel)
+        const apiUrl = window.location.origin.includes("vercel.app")
+          ? "/api/predict"
+          : "/predict";
+
+        const response = await fetch(apiUrl, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(data),
         });
 
+        // ✅ Handle JSON properly
         const result = await response.json();
 
-        if (result.prediction !== undefined) {
-            document.getElementById("predictionText").innerText =
-                "Predicted Gold Price: " + result.prediction.toFixed(2);
-        } else {
-            document.getElementById("predictionText").innerText =
-                "Error: Could not generate prediction.";
-        }
+        // ✅ Display result on page
+        document.getElementById("predictionText").innerText =
+          "Predicted Gold Price: ₹" + result.prediction.toFixed(2);
+      } catch (err) {
+        console.error("Prediction failed:", err);
+        document.getElementById("predictionText").innerText =
+          "Error: Prediction failed.";
+      }
     });
-    </script>
+  </script>
 </body>
 </html>
