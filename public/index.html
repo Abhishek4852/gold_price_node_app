@@ -54,7 +54,9 @@
 </head>
 <body>
     <h2>Gold Price Prediction</h2>
-    <form action="/predict" method="post">
+
+    <!-- 👇 ID add kar diya -->
+    <form id="predictForm">
         <input type="text" name="oil_close" placeholder="Oil Close" required><br>
         <input type="text" name="nasdaq_close" placeholder="Nasdaq Close" required><br>
         <input type="text" name="sp500_close" placeholder="S&P 500 Close" required><br>
@@ -65,6 +67,31 @@
         <button type="submit">Predict</button>
     </form>
 
-    <h3>{{ prediction_text }}</h3>
+    <h3 id="predictionText"></h3>
+
+    <script>
+    document.getElementById("predictForm").addEventListener("submit", async function(e) {
+        e.preventDefault();
+
+        const formData = new FormData(this);
+        const data = Object.fromEntries(formData.entries());
+
+        const response = await fetch("/predict", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(data)
+        });
+
+        const result = await response.json();
+
+        if (result.prediction !== undefined) {
+            document.getElementById("predictionText").innerText =
+                "Predicted Gold Price: " + result.prediction.toFixed(2);
+        } else {
+            document.getElementById("predictionText").innerText =
+                "Error: Could not generate prediction.";
+        }
+    });
+    </script>
 </body>
 </html>

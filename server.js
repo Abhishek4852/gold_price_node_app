@@ -1,4 +1,3 @@
-// server.js
 import express from "express";
 import cors from "cors";
 import path from "path";
@@ -11,12 +10,12 @@ const __dirname = path.dirname(__filename);
 const app = express();
 app.use(cors());
 app.use(express.json());
-app.use(express.urlencoded({ extended: true })); // for form submission
-app.use(express.static("public"));
+app.use(express.urlencoded({ extended: true })); // ✅ For form submissions
+app.use(express.static(path.join(__dirname, "public")));
 
 let session;
 
-// 🔹 Load ONNX model
+// ✅ Load ONNX model
 (async () => {
   try {
     const modelPath = path.join(__dirname, "model.onnx");
@@ -29,17 +28,13 @@ let session;
   }
 })();
 
-// 🔹 Serve frontend
-app.get("/", (req, res) => {
-  res.sendFile(path.join(__dirname, "public", "index.html"));
-});
-
-// 🔹 Prediction route (for HTML form)
+// ✅ Prediction route
 app.post("/predict", async (req, res) => {
   try {
-    if (!session) return res.send("Model is still loading, try again later.");
+    if (!session) {
+      return res.status(503).json({ error: "Model not loaded yet, try again later." });
+    }
 
-    // Extract form data (as strings)
     const {
       oil_close,
       nasdaq_close,
@@ -50,7 +45,8 @@ app.post("/predict", async (req, res) => {
       usd_chf,
     } = req.body;
 
-    // Convert to numbers
+    console.log("Incoming Data:", req.body);
+
     const inputArray = [
       parseFloat(oil_close),
       parseFloat(nasdaq_close),
@@ -61,28 +57,29 @@ app.post("/predict", async (req, res) => {
       parseFloat(usd_chf),
     ];
 
-    // Create tensor for ONNX
-    const inputName = session.inputNames[0];
-    const outputName = session.outputNames[0];
-    const tensor = new ort.Tensor("float32", Float32Array.from(inputArray), [1, inputArray.length]);
+    const inputName = session.inputNames[0]; // ✅ Dynamic input name
+    const feeds = {
+      [inputName]: new ort.Tensor("float32", Float32Array.from(inputArray), [1, inputArray.length]),
+    };
 
-    const results = await session.run({ [inputName]: tensor });
+    const results = await session.run(feeds);
+    const outputName = session.outputNames[0];
     const prediction = results[outputName].data[0];
 
-    // Load HTML and show result dynamically
-    import("fs").then((fs) => {
-      const filePath = path.join(__dirname, "public", "index.html");
-      fs.readFile(filePath, "utf8", (err, data) => {
-        if (err) return res.send("Error loading HTML file");
-        const updatedHtml = data.replace("{{ prediction_text }}", `Predicted Gold Price: ₹${prediction.toFixed(2)}`);
-        res.send(updatedHtml);
-      });
-    });
+    console.log("Prediction:", prediction);
+
+    res.json({ prediction });
   } catch (err) {
     console.error("Prediction Error:", err);
-    res.status(500).send("Prediction failed.");
+    res.status(500).json({ error: "Prediction failed" });
   }
 });
 
-const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => console.log(`🚀 Server running at http://localhost:${PORT}`));
+// ✅ Local run
+if (process.env.NODE_ENV !== "production") {
+  const PORT = process.env.PORT || 3000;
+  app.listen(PORT, () => console.log(`🚀 Server running at http://localhost:${PORT}`));
+}
+
+// ✅ For Vercel deployment
+export default app;
