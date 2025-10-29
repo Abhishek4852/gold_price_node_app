@@ -1,0 +1,19 @@
+{
+  "name": "gold_price_node_app",
+  "version": "1.0.0",
+  "description": "Gold price prediction app using Node.js and ONNX model",
+  "type": "module",
+  "main": "index.js",
+  "scripts": {
+    "start": "node server.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "cors": "^2.8.5",
+    "express": "^5.1.0",
+    "onnxruntime-node": "^1.23.0"
+  }
+}
